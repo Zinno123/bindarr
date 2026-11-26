@@ -8,6 +8,8 @@ import { useMultiSelect } from '../utils/useMultiSelect';
 import { langName } from '../utils/languages';
 import { nextCamera } from '../utils/cameraPick';
 import { isDeviceMode } from '../apiBase';
+import { recognizeCardText } from '../utils/nativeDetector.js';
+import { readYgoCode, exactYgoRows, referenceCode } from '../utils/ygoScanOcr.js';
 import { useT } from '../utils/i18n';
 import { useCameraStream } from './scanner/useCameraStream';
 import { useScanPipeline } from './scanner/useScanPipeline';
@@ -308,6 +310,11 @@ function CameraScanner({ onAddSuccess, showToast }) {
     }
     setScanStatus('');
     if (matches.length === 1 && (scanGame !== 'mtg' || autoSingle)) {
+      // For YGO, artwork alone cannot prove the printing or foil rarity.
+      if (scanGame === 'yugioh' && !autoSingle) {
+        openQuickAdd(matches[0]);
+        return;
+      }
       // Auto-add, not auto-scan: scanning found the card either way. This decides
       // whether it is filed straight away or handed to the add drawer first.
       if (autoAdd) {
@@ -417,6 +424,11 @@ function CameraScanner({ onAddSuccess, showToast }) {
           setDebugHashImg(imageData);
           lastScanImgRef.current = imageData;
           lastScanCroppedRef.current = !!cropped;
+          // OCR uses the original high-resolution guide frame, not the 448px
+          // embedding crop, and runs entirely on the Android device.
+          const ocrPromise = scanGame === 'yugioh'
+            ? recognizeCardText(framedCanvas).then(readYgoCode)
+            : Promise.resolve(null);
           try {
             const resp = await fetch('/api/scan-match', {
               method: 'POST',
@@ -456,6 +468,32 @@ function CameraScanner({ onAddSuccess, showToast }) {
               // cannot tell apart, a narrow margin, a card the catalog does not
               // know. The rules are scanner/scanDecision.js.
               const { top, confidentPick } = scanDecision(match);
+              if (scanGame === 'yugioh') {
+                const code = await ocrPromise;
+                if (scanId !== currentScanId.current) return;
+                if (code) {
+                  const lookup = async (number) => {
+                    const params = new URLSearchParams({ game: 'yugioh', lang: 'en', number });
+                    const response = await fetch('/api/search?' + params.toString());
+                    if (!response.ok) return [];
+                    return exactYgoRows(await response.json(), number);
+                  };
+                  let rows = await lookup(code);
+                  const alternate = referenceCode(code);
+                  if (!rows.length && alternate && alternate !== code) {
+                    rows = (await lookup(alternate)).map(row => ({ ...row, __ygoOcrLanguage: 'German' }));
+                  }
+                  if (scanId !== currentScanId.current) return;
+                  if (rows.length) {
+                    // All exact-number rows remain visible, including different
+                    // rarities. A visual hit alone must not pick one silently.
+                    flow.setLastMatches(rows);
+                    flow.setAutoAddAlternatives([]);
+                    await applyMatches(rows, '', false);
+                    return;
+                  }
+                }
+              }
               if (candidates && candidates.length > 0) {
                 // Resolve the WHOLE ORB list to real cards, once, and use it for
                 // both outcomes. The confident path used to resolve only the top
@@ -466,7 +504,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
                 // nowhere to put alternatives — resolving eight cards per scan
                 // would be pure latency on the fastest tier. Everywhere else the
                 // whole list is resolved, because the countdown shows it.
-                const wanted = (confidentPick && profile.countdown === 0)
+                const wanted = (scanGame !== 'yugioh' && confidentPick && profile.countdown === 0)
                   ? candidates.slice(0, 1)
                   : candidates.slice(0, 8);
                 // Only announce a fetch if one is actually needed; anything the
@@ -483,7 +521,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
                   // Confident: auto-add the top pick, but keep the rest on screen
                   // beside the countdown so a wrong guess is one tap to correct
                   // rather than an undo after the fact.
-                  if (confidentPick && sameCard(validCandidates[0], top)) {
+                  if (scanGame !== 'yugioh' && confidentPick && sameCard(validCandidates[0], top)) {
                     flow.setAutoAddAlternatives(validCandidates.slice(1));
                     await applyMatches([validCandidates[0]], '', true);
                     return;
