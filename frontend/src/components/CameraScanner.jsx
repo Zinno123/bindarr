@@ -481,7 +481,8 @@ function CameraScanner({ onAddSuccess, showToast }) {
                   let rows = await lookup(code);
                   const alternate = referenceCode(code);
                   if (!rows.length && alternate && alternate !== code) {
-                    rows = (await lookup(alternate)).map(row => ({ ...row, __ygoOcrLanguage: 'German' }));
+                    rows = await lookup(alternate);
+                    if (rows.length) showToast(`${code}: English catalogue reference only`);
                   }
                   if (scanId !== currentScanId.current) return;
                   if (rows.length) {
@@ -489,7 +490,10 @@ function CameraScanner({ onAddSuccess, showToast }) {
                     // rarities. A visual hit alone must not pick one silently.
                     flow.setLastMatches(rows);
                     flow.setAutoAddAlternatives([]);
-                    await applyMatches(rows, '', false);
+                    const topId = top?.card?.id || top?.id;
+                    const safeAuto = rows.length === 1 && code === String(rows[0].number || '').toUpperCase()
+                      && confidentPick && topId === rows[0].id;
+                    await applyMatches(rows, '', safeAuto);
                     return;
                   }
                 }
