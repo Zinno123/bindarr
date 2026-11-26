@@ -10,6 +10,7 @@ name: Build Mobile Apps
 on:
   push:
     tags: [ "v*" ]
+    branches: [ "ygo-edition" ]
   workflow_dispatch:
 
 permissions:
