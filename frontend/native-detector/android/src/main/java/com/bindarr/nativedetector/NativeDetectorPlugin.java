@@ -12,6 +12,9 @@ import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.TextRecognition;
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -60,6 +63,8 @@ public class NativeDetectorPlugin extends Plugin {
     // the activity, the loaded session should not be, and ORT work must never run
     // on Capacitor's shared plugin thread, which every other plugin call waits on.
     private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final com.google.mlkit.vision.text.TextRecognizer TEXT_RECOGNIZER =
+        TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
     private static OrtEnvironment env;
     private static OrtSession session;
     private static String loadedTag;
@@ -214,6 +219,39 @@ public class NativeDetectorPlugin extends Plugin {
             } catch (Throwable t) {
                 Log.e(TAG, "detect failed", t);
                 call.reject("detect failed: " + t.getMessage());
+            }
+        });
+    }
+
+    // On-device Latin OCR; called once per captured card, never per live frame.
+    @PluginMethod
+    public void recognizeText(PluginCall call) {
+        final String image = call.getString("image");
+        if (image == null || image.length() > 6000000) {
+            call.reject("invalid OCR image");
+            return;
+        }
+        EXECUTOR.execute(() -> {
+            Bitmap bitmap = null;
+            try {
+                byte[] jpeg = Base64.decode(image, Base64.DEFAULT);
+                bitmap = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
+                if (bitmap == null) {
+                    call.reject("OCR image did not decode");
+                    return;
+                }
+                final Bitmap input = bitmap;
+                TEXT_RECOGNIZER.process(InputImage.fromBitmap(input, 0))
+                    .addOnSuccessListener(result -> {
+                        JSObject out = new JSObject();
+                        out.put("text", result.getText());
+                        call.resolve(out);
+                    })
+                    .addOnFailureListener(error -> call.reject("OCR failed", error))
+                    .addOnCompleteListener(task -> input.recycle());
+            } catch (Exception e) {
+                if (bitmap != null) bitmap.recycle();
+                call.reject("OCR failed", e);
             }
         });
     }
