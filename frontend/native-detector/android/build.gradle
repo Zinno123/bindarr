@@ -32,6 +32,8 @@ repositories {
 
 dependencies {
     implementation project(':capacitor-android')
+    // Bundled Latin OCR model: no cloud recognition or paid API.
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
     // The full Android build: CPU EP plus XNNPACK, ~6 MB of native code per ABI
     // (an .aab ships only the phone's own ABI).
     implementation "com.microsoft.onnxruntime:onnxruntime-android:$onnxruntimeVersion"
