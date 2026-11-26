@@ -110,3 +110,16 @@ export async function detectNative(canvas, seq, engine) {
     prepMs: out.prepMs,
   };
 }
+
+/** Android-only offline OCR. Return no text rather than guessing on failure. */
+export async function recognizeCardText(canvas) {
+  if (Capacitor.getPlatform() !== 'android' || !nativeDetectorAvailable()) return '';
+  try {
+    const image = await base64Of(await jpegOf(canvas));
+    const out = await NativeDetector.recognizeText({ image });
+    return typeof out?.text === 'string' ? out.text : '';
+  } catch (err) {
+    console.warn('[nativeDetector] OCR unavailable:', err?.message || err);
+    return '';
+  }
+}
