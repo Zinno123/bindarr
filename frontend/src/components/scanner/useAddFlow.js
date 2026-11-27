@@ -90,7 +90,7 @@ export function useAddFlow({
     // the duplicate path instead of auto-adding a second time.
     lastAddedIdRef.current = card.id;
     try {
-      const autoPrinting = overrides?.printing || ((card.rarity || '').toLowerCase().includes('holo') ? 'Holofoil' : 'Normal');
+      const autoPrinting = overrides?.printing || ((card.game || scanGame) === 'yugioh' ? (card.__ygoFirstEdition ? '1st Edition' : 'Normal') : ((card.rarity || '').toLowerCase().includes('holo') ? 'Holofoil' : 'Normal'));
       const autoCondition = overrides?.condition || 'Near Mint';
       // See addLanguage: a localized printing files as itself, an English row files
       // as the language being scanned. Auto-add used to hard-code English, and then
@@ -185,7 +185,9 @@ export function useAddFlow({
     setSelectedCard(card);
     setPurchasePrice(0);
     const rarity = (card.rarity || '').toLowerCase();
-    if (rarity.includes('holo') || rarity.includes('secret') || rarity.includes('ultra') || rarity.includes('shining')) {
+    if ((card.game || scanGame) === 'yugioh') {
+      setPrinting(card.__ygoFirstEdition ? '1st Edition' : 'Normal');
+    } else if (rarity.includes('holo') || rarity.includes('secret') || rarity.includes('ultra') || rarity.includes('shining')) {
       setPrinting('Holofoil');
     } else {
       setPrinting('Normal');

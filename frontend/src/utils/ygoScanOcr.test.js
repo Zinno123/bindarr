@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readYgoCode, exactYgoRows, referenceCode, ygoCopyLanguage } from './ygoScanOcr.js';
+import { readYgoCode, exactYgoRows, referenceCode, ygoCopyLanguage, combineYgoEvidence } from './ygoScanOcr.js';
 
 test('extracts one printed code without correcting uncertain characters', () => {
   assert.equal(readYgoCode('RA01 – DE001 ATK 1000'), 'RA01-DE001');
@@ -23,4 +23,15 @@ test('printed language tag identifies German and English copies, not Japanese gu
   assert.equal(ygoCopyLanguage('RA01-EN001'), 'English');
   assert.equal(ygoCopyLanguage('RD-KP01-JP001'), null);
   assert.equal(ygoCopyLanguage('LOB-001'), null);
+});
+
+test('OCR evidence preserves Rush Duel prefix and refuses conflicting set numbers', () => {
+  assert.equal(readYgoCode('RD/KP01-JP001'), 'RD-KP01-JP001');
+  assert.equal(readYgoCode('RD-KP01-JP001'), 'RD-KP01-JP001');
+  assert.equal(combineYgoEvidence(['RD-KP01-JP001']).rush, true);
+  assert.equal(combineYgoEvidence(['RA01-DE001','RA01-DE002']).conflict, true);
+  assert.equal(combineYgoEvidence(['RA01-DE001','RA01-DE001']).code, 'RA01-DE001');
+  assert.equal(combineYgoEvidence(['RA01-DE001 1. Auflage']).firstEdition, true);
+  assert.equal(combineYgoEvidence(['LOB-EN001 1st Edition']).firstEdition, true);
+  assert.equal(combineYgoEvidence(['LOB-EN001 LIMITED EDITION']).limited, true);
 });

@@ -57,12 +57,14 @@ const KEY = 'hidden_games';
 // (`defaultEnabled: false` in the registry: the five served from TCGplayer's
 // catalogue), and "never hidden" can no longer mean "shown" for those.
 const SHOWN_KEY = 'shown_games';
-const ALL = GAMES.map(g => g.value);
+// YGO Edition: keep the full registry for old backups and shared helpers, but
+// never expose unrelated games in the active app.
+const ALL = ['yugioh'];
 // What a browser that has decided nothing shows: every game but the ones the
 // registry starts off. An install upgraded to a release that adds a game does not
 // suddenly grow its tabs, filters and pickers; the setup wizard and Settings ->
 // Preferences say the others exist and switch them on.
-export const DEFAULT_GAMES = GAMES.filter(g => g.defaultEnabled !== false).map(g => g.value);
+export const DEFAULT_GAMES = ['yugioh'];
 
 const readList = (key) => {
   try {

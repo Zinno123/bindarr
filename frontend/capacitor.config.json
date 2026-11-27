@@ -1,6 +1,6 @@
 {
   "appId": "com.bindarr.app",
-  "appName": "Bindarr",
+  "appName": "YGO Collection",
   "webDir": "dist",
   "plugins": {
     "CapacitorHttp": {

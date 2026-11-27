@@ -103,10 +103,11 @@ function ScanMatchesModal({
                   text in the modal. */}
               <div className="tcg-card-info" style={{ textAlign: 'center', marginTop: '0.5rem' }}>
                 <div className="tcg-card-name" style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-strong)', lineHeight: 1.2 }}>{getCardDisplayName(card.name, addLanguage(card), card.printed_name)}</div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>#{card.number}</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>#{card.__ygoPrintedCode || card.number}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{card.set_name}</div>
+                {card.rarity && <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-strong)' }}>{card.rarity}</div>}
                 <LangFallbackNote card={card} />
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-yellow)', marginTop: '0.2rem' }}><Price value={card.price_trend} currency={card.price_currency} /></div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-yellow)', marginTop: '0.2rem' }}><Price value={card.price_trend} currency={card.price_currency} />{card.game === 'yugioh' && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}> · {card.price_source === 'cardmarket' ? 'Cardmarket' : 'TCGplayer'}</span>}</div>
               </div>
             </div>
           ))}

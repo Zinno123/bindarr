@@ -1135,7 +1135,7 @@ function Settings({ user, onUpdateUser, showToast, onLeaveDevice, onDataChanged 
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label>{t('prefs.gamesShown')}</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {GAMES.map(({ value, label }) => {
+              {GAMES.filter(g => g.value === 'yugioh').map(({ value, label }) => {
                 const on = shownGames.includes(value);
                 const isLast = on && shownGames.length === 1;
                 return (

@@ -31,10 +31,11 @@ export default function QuickAddDrawer({ flow, onBackToMatches }) {
               <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
                 <h3 style={{ color: 'var(--text-muted)', fontSize: '0.7rem', margin: 0, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 800 }}>{t('scan.addScannedTitle')}</h3>
                 <p style={{ color: 'var(--text-strong)', fontSize: '1.25rem', fontWeight: 800, margin: '0.1rem 0 0 0', lineHeight: 1.2, wordBreak: 'break-word' }}>
-                  {getCardDisplayName(selectedCard.name, language, selectedCard.printed_name)} <span style={{ color: 'var(--text-primary)' }}>#{selectedCard.number}</span>
+                  {getCardDisplayName(selectedCard.name, language, selectedCard.printed_name)} <span style={{ color: 'var(--text-primary)' }}>#{selectedCard.__ygoPrintedCode || selectedCard.number}</span>
                 </p>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: 0, wordBreak: 'break-word' }}>{selectedCard.set_name}</p>
                 <LangFallbackNote card={selectedCard} style={{ justifyContent: 'flex-start' }} />
+                {selectedCard.__ygoLimited && <p style={{ color: 'var(--accent-yellow)', fontSize: '0.8rem', margin: 0 }}>Limited Edition detected — this preview cannot store that edition separately.</p>}
               </div>
               <button type="button" className="btn btn-secondary btn-icon-only" onClick={closeDrawer} aria-label={t('common.close')} style={{ borderRadius: '50%', flexShrink: 0 }}>
                 <X size={18} />
@@ -53,12 +54,12 @@ export default function QuickAddDrawer({ flow, onBackToMatches }) {
                     className="quick-add-preview-img"
                   />
                   <div className="quick-add-preview-info">
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TCG Market ({printing})</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedCard.price_source === 'cardmarket' ? 'Cardmarket' : selectedCard.game === 'yugioh' ? 'TCGplayer (not Cardmarket)' : 'TCG Market'} ({printing})</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-yellow)', margin: '0.1rem 0' }}>
                       <Price value={resolveCardPrice(selectedCard, printing)} currency={selectedCard.price_currency} />
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                      Rarity: <span style={{ color: 'var(--text-strong)', fontWeight: 600 }}>{selectedCard.rarity || 'Common'}</span>
+                      Rarity: <span style={{ color: 'var(--text-strong)', fontWeight: 600 }}>{selectedCard.rarity || 'Unknown'}</span>
                     </div>
                   </div>
                 </div>

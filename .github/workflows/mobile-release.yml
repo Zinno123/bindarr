@@ -55,6 +55,16 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: YGO scanner and price parser unit tests
+        if: github.ref_name == 'ygo-edition'
+        run: |
+          node --test frontend/src/utils/ygoScanOcr.test.js backend/test/ygoCardmarket.test.js
+
+      - name: Check official Cardmarket data format (diagnostic)
+        if: github.ref_name == 'ygo-edition'
+        continue-on-error: true
+        run: node scripts/ygo-cardmarket-audit.mjs
+
       - name: Build web + sync Capacitor
         working-directory: frontend
         run: |

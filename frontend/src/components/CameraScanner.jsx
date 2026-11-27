@@ -8,8 +8,8 @@ import { useMultiSelect } from '../utils/useMultiSelect';
 import { langName } from '../utils/languages';
 import { nextCamera } from '../utils/cameraPick';
 import { isDeviceMode } from '../apiBase';
-import { recognizeCardText } from '../utils/nativeDetector.js';
-import { readYgoCode, exactYgoRows, referenceCode, ygoCopyLanguage } from '../utils/ygoScanOcr.js';
+import { recognizeYgoEvidence } from './scanner/ygoCaptureOcr.js';
+import { exactYgoRows, referenceCode, ygoCopyLanguage } from '../utils/ygoScanOcr.js';
 import { useT } from '../utils/i18n';
 import { useCameraStream } from './scanner/useCameraStream';
 import { useScanPipeline } from './scanner/useScanPipeline';
@@ -427,15 +427,26 @@ function CameraScanner({ onAddSuccess, showToast }) {
           // OCR uses the original high-resolution guide frame, not the 448px
           // embedding crop, and runs entirely on the Android device.
           const ocrPromise = scanGame === 'yugioh'
-            ? recognizeCardText(framedCanvas).then(readYgoCode)
+            ? recognizeYgoEvidence(framedCanvas)
             : Promise.resolve(null);
           // OCR is an independent identification path. Do not require the
           // artwork engine or its catalog to succeed before looking up a code.
           let ocrStatus = '';
           if (scanGame === 'yugioh') {
-            const code = await ocrPromise;
+            const evidence = await ocrPromise;
+            const code = evidence?.code;
             if (scanId !== currentScanId.current) return;
             ocrStatus = code ? `OCR: ${code}` : 'OCR: no set code detected';
+            if (evidence?.conflict) {
+              setScanStatus('Conflicting set codes — scan one card again');
+              signal('error');
+              return;
+            }
+            if (evidence?.rush || evidence?.japanese) {
+              setScanStatus(`${code || 'Japanese/Rush Duel'} — separate catalogue not yet supported`);
+              signal('error');
+              return;
+            }
             if (code) {
               const lookup = async (number) => {
                 const params = new URLSearchParams({ game: 'yugioh', lang: 'en', number, limit: '250' });
@@ -456,7 +467,9 @@ function CameraScanner({ onAddSuccess, showToast }) {
                 if (scanId !== currentScanId.current) return;
                 if (result.rows.length) {
                   const copyLanguage = ygoCopyLanguage(code);
-                  const matches = result.rows.map(row => ({ ...row, __ygoOcrLanguage: copyLanguage }));
+                  const matches = result.rows.map(row => ({ ...row, __ygoOcrLanguage: copyLanguage, __ygoPrintedCode: code, __ygoFirstEdition: evidence.firstEdition, __ygoLimited: evidence.limited }));
+                  // The OCR shortlist is exact by number; do not guess among
+                  // foil variants. Preserve all matching products for review.
                   flow.setLastMatches(matches);
                   flow.setAutoAddAlternatives([]);
                   // Preview build: ask rather than silently adding an OCR
@@ -565,6 +578,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
           } catch (e) { console.warn('scan-match request failed:', e); }
           if (ocrStatus) {
             setScanStatus(withOcrStatus(t('scan.noConfidentMatch')));
+            resolvedDupIdRef.current = null;
             signal('error');
             return;
           }
