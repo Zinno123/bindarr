@@ -65,6 +65,7 @@ export function useAddFlow({
   // Memoized on scanLang alone (all it reads), because the panels call it while
   // rendering and a new identity every render would re-render them every time.
   const addLanguage = useCallback((card) => {
+    if (card?.__ygoOcrLanguage) return card.__ygoOcrLanguage;
     const own = card?.language;
     return own && langCode(own) !== 'en' ? own : langName(scanLang);
   }, [scanLang]);
@@ -196,6 +197,7 @@ export function useAddFlow({
   const handleLanguageChange = async (newLang) => {
     setLanguage(newLang);
     if (!selectedCard) return;
+    if ((selectedCard.game || scanGame) === 'yugioh') return;
     try {
       const targetGame = selectedCard.game || scanGame;
       const resp = await fetch(`/api/cards/${encodeURIComponent(selectedCard.id)}/printing?lang=${encodeURIComponent(newLang)}&game=${encodeURIComponent(targetGame)}`);
