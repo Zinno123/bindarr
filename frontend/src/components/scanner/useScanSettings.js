@@ -158,7 +158,7 @@ export function useScanSettings({ onScanLanguageReset, onCatalogSwitch }) {
 
     // tree=1: parents carrying their subsets, so the filter can offer a release
     // family as one tick and still let its tokens/art cards be dropped.
-    fetch(`/api/sets?game=${scanGame}&lang=${encodeURIComponent(scanLang)}&tree=1`)
+    fetch(`/api/sets?game=${scanGame}&lang=${encodeURIComponent(scanGame === 'yugioh' ? 'en' : scanLang)}&tree=1`)
       .then(r => r.ok ? r.json() : [])
       .then(data => {
         if (!cancelled) setSetList(data);
@@ -171,7 +171,7 @@ export function useScanSettings({ onScanLanguageReset, onCatalogSwitch }) {
     // offers sets that match NOTHING — Pokemon's set table is pokemontcg.io's
     // numbering while the catalog is keyed by TCGdex's, and a filter that matches
     // no rows makes cvScan fall back to an unscoped scan without saying so.
-    fetch(`/api/scan-sets?game=${scanGame}&lang=${encodeURIComponent(scanLang)}`)
+    fetch(`/api/scan-sets?game=${scanGame}&lang=${encodeURIComponent(scanGame === 'yugioh' ? 'en' : scanLang)}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!cancelled) setScanSets(data);
