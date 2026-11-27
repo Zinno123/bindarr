@@ -9,7 +9,7 @@ import { langName } from '../utils/languages';
 import { nextCamera } from '../utils/cameraPick';
 import { isDeviceMode } from '../apiBase';
 import { recognizeCardText } from '../utils/nativeDetector.js';
-import { readYgoCode, exactYgoRows, referenceCode } from '../utils/ygoScanOcr.js';
+import { readYgoCode, exactYgoRows, referenceCode, ygoCopyLanguage } from '../utils/ygoScanOcr.js';
 import { useT } from '../utils/i18n';
 import { useCameraStream } from './scanner/useCameraStream';
 import { useScanPipeline } from './scanner/useScanPipeline';
@@ -455,11 +455,13 @@ function CameraScanner({ onAddSuccess, showToast }) {
                 }
                 if (scanId !== currentScanId.current) return;
                 if (result.rows.length) {
-                  flow.setLastMatches(result.rows);
+                  const copyLanguage = ygoCopyLanguage(code);
+                  const matches = result.rows.map(row => ({ ...row, __ygoOcrLanguage: copyLanguage }));
+                  flow.setLastMatches(matches);
                   flow.setAutoAddAlternatives([]);
                   // Preview build: ask rather than silently adding an OCR
                   // misread or a localized reference with the wrong rarity.
-                  await applyMatches(result.rows, '', false);
+                  await applyMatches(matches, '', false);
                   showToast(reference ? `${code}: English reference — verify language/rarity` : `${code}: ${result.rows.length} candidate(s) — verify printing`);
                   return;
                 }
@@ -474,7 +476,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
             const resp = await fetch('/api/scan-match', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ game: scanGame, image: imageData, cropped: !!cropped, set: scanSetParam, lang: scanLang, recallK: profile.recallK, orb: profile.orb }),
+              body: JSON.stringify({ game: scanGame, image: imageData, cropped: !!cropped, set: scanSetParam, lang: scanGame === 'yugioh' ? 'en' : scanLang, recallK: profile.recallK, orb: profile.orb }),
             });
             if (scanId !== currentScanId.current) return;
             // A 503 here is the server saying no catalog exists for this game and
