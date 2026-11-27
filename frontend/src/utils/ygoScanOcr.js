@@ -15,3 +15,11 @@ export function exactYgoRows(rows, code) {
 export function referenceCode(code) {
   return typeof code === 'string' ? code.replace(/-DE(?=\d)/, '-EN') : null;
 }
+
+// The printed language tag is evidence for this physical copy, not a new catalogue row.
+export function ygoCopyLanguage(code) {
+  if (typeof code !== 'string') return null;
+  if (/-(?:DE|G)\d/i.test(code)) return 'German';
+  if (/-(?:EN|E)\d/i.test(code)) return 'English';
+  return null;
+}
