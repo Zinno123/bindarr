@@ -83,14 +83,14 @@ export default function ScanSettingsPanel({ settings, camera, onScanLanguage, au
                 of that until after the scan. */}
             {getLanguagesForGame(scanGame).map(l => (
               <option key={l.code} value={l.code}>
-                {l.name}{scanBuiltLangs.length && !scanBuiltLangs.includes(l.name)
+                {l.name}{scanGame !== 'yugioh' && scanBuiltLangs.length && !scanBuiltLangs.includes(l.name)
                   ? ` — ${t('scan.langNoCatalogTag')}` : ''}
               </option>
             ))}
           </select>
         </div>
       </div>
-      {!!scanBuiltLangs.length && !scanBuiltLangs.includes(langName(scanLang)) && (
+      {scanGame !== 'yugioh' && !!scanBuiltLangs.length && !scanBuiltLangs.includes(langName(scanLang)) && (
         <p style={{
           margin: '0.4rem 0 0', fontSize: '0.72rem', lineHeight: 1.4,
           color: scanGame === 'pokemon' ? 'var(--accent-yellow)' : 'var(--text-muted)',
