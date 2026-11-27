@@ -429,6 +429,47 @@ function CameraScanner({ onAddSuccess, showToast }) {
           const ocrPromise = scanGame === 'yugioh'
             ? recognizeCardText(framedCanvas).then(readYgoCode)
             : Promise.resolve(null);
+          // OCR is an independent identification path. Do not require the
+          // artwork engine or its catalog to succeed before looking up a code.
+          let ocrStatus = '';
+          if (scanGame === 'yugioh') {
+            const code = await ocrPromise;
+            if (scanId !== currentScanId.current) return;
+            ocrStatus = code ? `OCR: ${code}` : 'OCR: no set code detected';
+            if (code) {
+              const lookup = async (number) => {
+                const params = new URLSearchParams({ game: 'yugioh', lang: 'en', number, limit: '250' });
+                const response = await fetch('/api/search?' + params.toString());
+                if (!response.ok) throw new Error(`card lookup HTTP ${response.status}`);
+                const rows = exactYgoRows(await response.json(), number);
+                return { rows, pending: response.headers.get('X-Catalogue-Pending') === '1' };
+              };
+              try {
+                let result = await lookup(code);
+                let reference = false;
+                const alternate = referenceCode(code);
+                if (!result.rows.length && alternate && alternate !== code) {
+                  const fallback = await lookup(alternate);
+                  result = { rows: fallback.rows, pending: result.pending || fallback.pending };
+                  reference = result.rows.length > 0;
+                }
+                if (scanId !== currentScanId.current) return;
+                if (result.rows.length) {
+                  flow.setLastMatches(result.rows);
+                  flow.setAutoAddAlternatives([]);
+                  // Preview build: ask rather than silently adding an OCR
+                  // misread or a localized reference with the wrong rarity.
+                  await applyMatches(result.rows, '', false);
+                  showToast(reference ? `${code}: English reference — verify language/rarity` : `${code}: ${result.rows.length} candidate(s) — verify printing`);
+                  return;
+                }
+                ocrStatus += result.pending ? ' — card database downloading' : ' — no exact database entry';
+              } catch (e) {
+                ocrStatus += ` — ${e.message || 'lookup failed'}`;
+              }
+            }
+          }
+          const withOcrStatus = (message) => ocrStatus ? `${message} · ${ocrStatus}` : message;
           try {
             const resp = await fetch('/api/scan-match', {
               method: 'POST',
@@ -444,7 +485,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
               const j = await resp.json().catch(() => null);
               if (scanId !== currentScanId.current) return;
               if (j?.notBuilt) {
-                setScanStatus(t('scan.catalogNotBuilt'));
+                setScanStatus(withOcrStatus(t('scan.catalogNotBuilt')));
                 signal('error');
                 return;
               }
@@ -452,7 +493,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
               // on this phone. Downloading it again would not help (MOB-04).
               if (j?.scanFailed) {
                 console.warn('On-device scan failed:', j.error);
-                setScanStatus(t('scan.deviceScanFailed'));
+                setScanStatus(withOcrStatus(t('scan.deviceScanFailed')));
                 signal('error');
                 return;
               }
@@ -468,36 +509,6 @@ function CameraScanner({ onAddSuccess, showToast }) {
               // cannot tell apart, a narrow margin, a card the catalog does not
               // know. The rules are scanner/scanDecision.js.
               const { top, confidentPick } = scanDecision(match);
-              if (scanGame === 'yugioh') {
-                const code = await ocrPromise;
-                if (scanId !== currentScanId.current) return;
-                if (code) {
-                  const lookup = async (number) => {
-                    const params = new URLSearchParams({ game: 'yugioh', lang: 'en', number });
-                    const response = await fetch('/api/search?' + params.toString());
-                    if (!response.ok) return [];
-                    return exactYgoRows(await response.json(), number);
-                  };
-                  let rows = await lookup(code);
-                  const alternate = referenceCode(code);
-                  if (!rows.length && alternate && alternate !== code) {
-                    rows = await lookup(alternate);
-                    if (rows.length) showToast(`${code}: English catalogue reference only`);
-                  }
-                  if (scanId !== currentScanId.current) return;
-                  if (rows.length) {
-                    // All exact-number rows remain visible, including different
-                    // rarities. A visual hit alone must not pick one silently.
-                    flow.setLastMatches(rows);
-                    flow.setAutoAddAlternatives([]);
-                    const topId = top?.card?.id || top?.id;
-                    const safeAuto = rows.length === 1 && code === String(rows[0].number || '').toUpperCase()
-                      && confidentPick && topId === rows[0].id;
-                    await applyMatches(rows, '', safeAuto);
-                    return;
-                  }
-                }
-              }
               if (candidates && candidates.length > 0) {
                 // Resolve the WHOLE ORB list to real cards, once, and use it for
                 // both outcomes. The confident path used to resolve only the top
@@ -534,7 +545,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
                   await applyMatches(validCandidates, '', false);
                   // applyMatches clears the status line for a non-empty list, so
                   // this has to land after it.
-                  if (notInCatalog) setScanStatus(t('scan.notInCatalog'));
+                  if (notInCatalog) setScanStatus(withOcrStatus(t('scan.notInCatalog')));
                   return;
                 }
                 // The catalog matched and nothing could be named. Only the
@@ -543,13 +554,18 @@ function CameraScanner({ onAddSuccess, showToast }) {
                 // "no confident match" would blame the photo for an install
                 // state the user can fix.
                 if (unresolvedPublished) {
-                  setScanStatus(t('scan.readyMadeUnresolved'));
+                  setScanStatus(withOcrStatus(t('scan.readyMadeUnresolved')));
                   signal('error');
                   return;
                 }
               }
             }
           } catch (e) { console.warn('scan-match request failed:', e); }
+          if (ocrStatus) {
+            setScanStatus(withOcrStatus(t('scan.noConfidentMatch')));
+            signal('error');
+            return;
+          }
         }
       }
 
@@ -915,12 +931,12 @@ function CameraScanner({ onAddSuccess, showToast }) {
             {/* The last fallback: no live detector could load at all, so auto-scan
                 can never fire. A plain shutter still works — the whole frame goes
                 up and the server finds the card itself. */}
-            {detectorDown && (
+            {(detectorDown || scanGame === 'yugioh') && (
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={() => handleCapture()}
-                disabled={loading}
+                disabled={loading || captureBlockedRef.current}
                 title={t('scan.manualCaptureHint')}
                 style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0 0.8rem' }}
               >
