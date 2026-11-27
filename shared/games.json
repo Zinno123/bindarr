@@ -79,7 +79,7 @@
     "setIdPrefix": "yugioh-",
     "provider": "tcgcsv",
     "defaultEnabled": false,
-    "languages": ["en"],
+    "languages": ["en", "de"],
     "printings": "edition",
     "features": { "prices": true, "scan": true, "grading": true, "gradedPrices": false, "decks": true },
     "deck": { "defaultFormat": "Advanced", "defaultSize": 40 },
