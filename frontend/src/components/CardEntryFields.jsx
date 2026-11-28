@@ -124,7 +124,7 @@ export default function CardEntryFields({
     // on a quick add. Still editable later in the card inspector.
     return (
       <div className="quick-add-fields-group">
-        {Quantity}{Price}{Condition}{Printing}
+        {Quantity}{Price}{Condition}{Printing}{game==='yugioh' && Language}
       </div>
     );
   }

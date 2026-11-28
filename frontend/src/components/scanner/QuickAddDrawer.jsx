@@ -1,3 +1,4 @@
+import YgoRarityBadge from '../YgoRarityBadge';
 import { X, ListFilter, RefreshCw, Layers } from 'lucide-react';
 import { useT } from '../../utils/i18n';
 import { getCardDisplayName } from '../../utils/langHelper';
@@ -49,11 +50,11 @@ export default function QuickAddDrawer({ flow, onBackToMatches }) {
 
                 {/* Column 1: Card Preview (Smaller card: width 150px) */}
                 <div className="quick-add-preview">
-                  <img
+                  <div style={{position:'relative',width:'fit-content',maxWidth:'100%'}}><img
                     src={selectedCard.image_url}
                     alt={getCardDisplayName(selectedCard.name, language, selectedCard.printed_name)}
                     className="quick-add-preview-img"
-                  />
+                  /><YgoRarityBadge card={selectedCard}/></div>
                   <div className="quick-add-preview-info">
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedCard.price_source === 'cardmarket' ? 'Cardmarket · product trend (all editions)' : selectedCard.price_source === 'cardmarket-unmapped' ? 'No Cardmarket mapping' : selectedCard.game === 'yugioh' ? 'TCGplayer (not Cardmarket)' : 'TCG Market'}</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-yellow)', margin: '0.1rem 0' }}>
@@ -102,7 +103,7 @@ export default function QuickAddDrawer({ flow, onBackToMatches }) {
                     style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
                   >
                     {findingPrintings ? <RefreshCw size={14} className="spin" /> : <Layers size={14} />}
-                    <span>{findingPrintings ? t('scan.fetchingCandidates') : (selectedCard.game === 'yugioh' ? 'All sets & rarity variants' : (t('scan.changePrinting') || t('scan.otherPrintings') || t('scan.rightNameWrongPrinting')))}</span>
+                    <span>{findingPrintings ? t('scan.fetchingCandidates') : (selectedCard.game === 'yugioh' ? 'Other versions' : (t('scan.changePrinting') || t('scan.otherPrintings') || t('scan.rightNameWrongPrinting')))}</span>
                   </button>
                 </div>
                 <div className="quick-add-footer-actions">

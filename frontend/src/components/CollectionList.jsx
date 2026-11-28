@@ -1,3 +1,4 @@
+import YgoRarityBadge from './YgoRarityBadge';
 import { memo, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Search, Trash2, Edit2, LayoutGrid, List, SlidersHorizontal, X, MousePointerClick } from 'lucide-react';
 import { getCardDisplayName, translateJapaneseName, hasJapaneseText } from '../utils/langHelper';
@@ -92,6 +93,7 @@ const CollectionTile = memo(function CollectionTile({ item, selected, selectMode
           <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 20, width: '22px', height: '22px', borderRadius: '50%', background: selected ? 'var(--accent-red)' : 'rgba(0,0,0,0.6)', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-strong)', fontSize: '0.8rem', fontWeight: 900 }}>{selected ? '✓' : ''}</div>
         )}
         <CardImage card={item} className="tcg-card-image" loading="lazy" draggable={false} />
+        <YgoRarityBadge card={item} offset={selectMode?34:6}/>
         {foilClass && (
           <div className={foilClass} style={{ borderRadius: 'var(--radius-sm)' }} />
         )}

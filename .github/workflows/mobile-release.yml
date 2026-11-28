@@ -58,7 +58,7 @@ jobs:
       - name: YGO scanner and price parser unit tests
         if: github.ref_name == 'ygo-edition'
         run: |
-          node --test frontend/src/utils/ygoScanOcr.test.js backend/test/ygoCardmarket.test.js backend/test/ygoCardmarketCrosswalk.test.js frontend/src/utils/ygoPrintings.test.js
+          node --test frontend/src/utils/ygoScanOcr.test.js backend/test/ygoCardmarket.test.js backend/test/ygoCardmarketCrosswalk.test.js frontend/src/utils/ygoPrintings.test.js frontend/src/utils/ygoRarity.test.js
 
       - name: Check official Cardmarket data format (diagnostic)
         if: github.ref_name == 'ygo-edition'

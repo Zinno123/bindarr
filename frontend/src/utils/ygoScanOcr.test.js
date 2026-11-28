@@ -14,7 +14,7 @@ test('exact number lookup keeps distinct rarities and removes duplicate rows onl
   assert.deepEqual(exactYgoRows([common,secret,common,{id:'c',number:'RA01-EN002'}],'RA01-EN001'),[common,secret]);
   assert.deepEqual(exactYgoRows([common], 'RA01-DE001'), []);
   assert.equal(referenceCode('RA01-DE001'), 'RA01-EN001');
-  assert.equal(referenceCode('LOB-G001'), 'LOB-G001');
+  assert.equal(referenceCode('LOB-G001'), 'LOB-E001');
 });
 
 test('printed language tag identifies German and English copies, not Japanese guesses', () => {

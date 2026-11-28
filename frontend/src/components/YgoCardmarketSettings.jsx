@@ -44,6 +44,7 @@ export default function YgoCardmarketSettings({ onChanged }) {
   const disabled=busy||state?.busy;
   return <div className="glass-panel" style={{display:'flex',flexDirection:'column',gap:'0.8rem'}}>
     <h3 style={{fontSize:'1.1rem'}}>Yu-Gi-Oh! · Cardmarket prices (EUR)</h3>
+    <p style={{fontSize:'0.75rem',color:'var(--text-muted)'}}>YGO preview · Versions & rarity badges · r3</p>
     <label htmlFor="ygo-refresh">Automatic price refresh (while the app is open)</label>
     <select id="ygo-refresh" className="select-control" value={days} onChange={e=>changeInterval(Number(e.target.value))}><option value={1}>Every day</option><option value={7}>Every week</option><option value={0}>Manual only</option></select>
     <p style={{fontSize:'0.85rem',color:'var(--text-secondary)'}}>Cardmarket provides daily market trends. First connect the card catalogue below. Until linked, prices are TCGplayer estimates, not Cardmarket. Individual language, condition and edition prices may differ.</p>

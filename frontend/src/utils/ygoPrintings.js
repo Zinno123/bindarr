@@ -1,3 +1,4 @@
+import { ygoBaseName } from './ygoRarity.js';
 // The local catalogue may contain several products for one set number. Always
 // request every page and preserve every distinct ID, even with identical art.
 export async function fetchYgoPrintings(filters, request = fetch) {
@@ -24,6 +25,16 @@ export function mergePrintings(groups) {
   return [...rows.values()];
 }
 export function sameYgoName(rows,name) {
-  const normalize=v=>String(v||'').normalize('NFKC').trim().toLowerCase();
+  const normalize=v=>ygoBaseName(v).normalize('NFKC').replace(/[’‘]/g,"'").trim().toLowerCase();
   return rows.filter(r=>normalize(r.name)===normalize(name)||normalize(r.printed_name)===normalize(name));
+}
+
+export async function fetchYgoOtherVersions(card, request = fetch) {
+  const base=ygoBaseName(card?.name);
+  if(!base)throw new Error('Card name missing');
+  const result=await fetchYgoPrintings({name:base},request);
+  const rows=mergePrintings([[card],sameYgoName(result.rows,base)]);
+  const original=String(card?.number||'').toUpperCase();
+  rows.sort((a,b)=>Number(String(b.number||'').toUpperCase()===original)-Number(String(a.number||'').toUpperCase()===original));
+  return {...result,rows};
 }

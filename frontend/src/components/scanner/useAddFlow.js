@@ -1,4 +1,4 @@
-import { fetchYgoPrintings, sameYgoName, mergePrintings } from '../../utils/ygoPrintings.js';
+import { fetchYgoOtherVersions } from '../../utils/ygoPrintings.js';
 import { useState, useEffect, useCallback } from 'react';
 // Loaded on the first ultra-rare, so the scanner's chunk does not carry it.
 const confetti = (options) => import('canvas-confetti').then(m => m.default(options)).catch(() => {});
@@ -241,8 +241,8 @@ export function useAddFlow({
     try {
       const searchGame = selectedCard.game || scanGame;
       if (searchGame === 'yugioh') {
-        const result = await fetchYgoPrintings({name:selectedCard.name});
-        const found = mergePrintings([[selectedCard],sameYgoName(result.rows,selectedCard.name)]);
+        const result = await fetchYgoOtherVersions(selectedCard);
+        const found = result.rows;
         if (result.pending) showToast('Yu-Gi-Oh catalogue still downloading — variants may be incomplete');
         if (found.length <= 1) {
           showToast('No other variants in the local catalogue. This does not prove they do not exist.');
@@ -250,7 +250,7 @@ export function useAddFlow({
         }
         // Preserve physical language evidence, but don't display the previous
         // set code as if it belonged to a different set.
-        const variants = found.map(c => ({...c,__ygoOcrLanguage:selectedCard.__ygoOcrLanguage}));
+        const variants = found.map(c => ({...c,__ygoOcrLanguage:selectedCard.__ygoOcrLanguage,__ygoArtworkOnly:true}));
         setLastMatches(variants);
         closeDrawer();
         setScanMatches(variants);

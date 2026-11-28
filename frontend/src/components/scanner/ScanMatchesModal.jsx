@@ -1,4 +1,6 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
+import YgoRarityBadge from '../YgoRarityBadge';
+import { ygoBaseName, ygoRarity } from '../../utils/ygoRarity.js';
 import Modal from '../Modal';
 import { X, RefreshCw, Search } from 'lucide-react';
 import { onActivateKey } from '../../utils/a11y';
@@ -17,6 +19,10 @@ function ScanMatchesModal({
   PICKER_PREVIEW, openQuickAdd, addLanguage, setShowAllMatches, setAutoScan,
 }) {
   const { t } = useT();
+  const [rarityFilter,setRarityFilter]=useState('');
+  const ygo=scanMatches.some(c=>c.game==='yugioh');
+  const rarityOptions=[...new Set(scanMatches.map(c=>c.rarity||'Unknown rarity'))].sort();
+  const visibleMatches=ygo && rarityFilter ? scanMatches.filter(c=>(c.rarity||'Unknown rarity')===rarityFilter) : scanMatches;
   return (
     <Modal onClose={dismissMatches} label={t('scan.identifiedTitle')} closeOnBackdrop={false} overlayClassName="modal-overlay modal-overlay--camera" className="glass-panel scan-suggestions-modal" style={{ maxWidth: '560px', width: '100%', display: 'flex', flexDirection: 'column', gap: '1.25rem', maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
@@ -48,7 +54,7 @@ function ScanMatchesModal({
             <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
               <input 
                 type="text" 
-                placeholder={t('scan.manualSearchPlaceholder')} 
+                placeholder="e.g. Dark Magician, RA01-EN020" 
                 className="input-control"
                 value={manualSearchText}
                 onChange={(e) => setManualSearchText(e.target.value)}
@@ -86,24 +92,25 @@ function ScanMatchesModal({
           </form>
         </div>
 
-        {scanMatches.some(c=>c.game==='yugioh') && <p style={{color:'var(--accent-yellow)',fontSize:'0.8rem',margin:0}}>Choose the exact set and rarity. {scanMatches.length} catalogue entries. Identical artwork does not identify foil rarity.</p>}
+        {ygo && <><p style={{color:'var(--accent-yellow)',fontSize:'0.8rem',margin:0}}>Choose the exact set and rarity. {scanMatches.length} catalogue entries. Identical artwork does not identify foil rarity.</p><label>Rarity <select className="select-control" value={rarityFilter} onChange={e=>setRarityFilter(e.target.value)}><option value="">All rarities</option>{rarityOptions.map(r=><option key={r} value={r}>{ygoRarity(r).code} — {r}</option>)}</select></label></>}
         {/* Strongest matches first — the same order, and the same cards, as
             the ORB match list. Only the first few are shown: eight cards at
             once is a wall to read while holding the card you are trying to
             identify, and the answer is usually near the top. */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.75rem', maxHeight: '350px', overflowY: 'auto', padding: '0.25rem' }}>
-          {(showAllMatches ? scanMatches : scanMatches.slice(0, PICKER_PREVIEW)).map(card => (
+          {(ygo || showAllMatches ? visibleMatches : visibleMatches.slice(0, PICKER_PREVIEW)).map(card => (
             <div key={card.id} className="tcg-card" role="button" tabIndex={0} onClick={() => openQuickAdd(card)} onKeyDown={onActivateKey(() => openQuickAdd(card))} style={{ cursor: 'pointer' }}>
-              <div className="tcg-card-inner" style={{ border: '1px solid var(--border-glass-hover)' }}>
+              <div className="tcg-card-inner" style={{ position:'relative', border: '1px solid var(--border-glass-hover)' }}>
                 {/* Lazy: "Change printing" can fill this with hundreds of printings. */}
                 <img src={card.image_url} alt={getCardDisplayName(card.name, addLanguage(card), card.printed_name)} className="tcg-card-image" loading="lazy" decoding="async" />
+                <YgoRarityBadge card={card} />
               </div>
               {/* Name and number are what the choice is actually made on —
                   the picture is already on screen above them, and at 0.75/0.65rem
                   the two lines that say WHICH printing this is were the smallest
                   text in the modal. */}
               <div className="tcg-card-info" style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-                <div className="tcg-card-name" style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-strong)', lineHeight: 1.2 }}>{getCardDisplayName(card.name, addLanguage(card), card.printed_name)}</div>
+                <div className="tcg-card-name" style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-strong)', lineHeight: 1.2 }}>{getCardDisplayName(ygo ? ygoBaseName(card.name) : card.name, addLanguage(card), card.printed_name)}</div>
                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>#{card.__ygoPrintedCode || card.number}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{card.set_name}</div>
                 {card.game === 'yugioh' && <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-strong)' }}>{card.rarity || 'Unknown rarity'}</div>}
@@ -114,7 +121,7 @@ function ScanMatchesModal({
           ))}
         </div>
 
-        {scanMatches.length > PICKER_PREVIEW && (
+        {!ygo && scanMatches.length > PICKER_PREVIEW && (
           <button
             type="button"
             className="btn btn-secondary btn-sm"

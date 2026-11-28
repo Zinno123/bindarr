@@ -588,7 +588,8 @@ function Settings({ user, onUpdateUser, showToast, onLeaveDevice, onDataChanged 
       {showPrecons && <PreconImportModal onClose={() => setShowPrecons(false)} showToast={showToast} onImported={dataChanged} />}
       {/* Title Panel */}
       <div className="glass-panel">
-        <h2 style={{ fontSize: '1.25rem', color: 'var(--text-strong)' }}>{t('settings.title')}</h2>
+        <h2 style={{ fontSize: '1.25rem', color: 'var(--text-strong)' }}>YGO Collection · {t('settings.title')}</h2>
+        <p style={{fontSize:'0.75rem',color:'var(--text-muted)'}}>Preview r3 · Versions & rarity badges</p>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{t(deviceMode ? 'settings.subtitleDevice' : 'settings.subtitle')}</p>
       </div>
 

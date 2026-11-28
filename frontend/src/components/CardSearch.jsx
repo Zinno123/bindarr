@@ -1,3 +1,4 @@
+import YgoRarityBadge from './YgoRarityBadge';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, Plus, X, ShieldAlert, Check, MousePointerClick, Zap, Undo2, Maximize2 } from 'lucide-react';
 import Price from './Price';
@@ -623,7 +624,7 @@ function CardSearch({ onAddSuccess, onDataChanged, showToast, setActiveTab }) {
                 <input
                   type="text"
                   className="input-control"
-                  placeholder={t(game === 'mtg' ? 'search.namePlaceholderMtg' : game === 'riftbound' ? 'search.namePlaceholderRiftbound' : 'search.namePlaceholderPokemon')}
+                  placeholder={game==='yugioh' ? 'e.g. Dark Magician, Ash Blossom, Blue-Eyes…' : t(game === 'mtg' ? 'search.namePlaceholderMtg' : game === 'riftbound' ? 'search.namePlaceholderRiftbound' : 'search.namePlaceholderPokemon')}
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setSyntaxError(null); }}
                   aria-invalid={syntaxError ? true : undefined}
@@ -666,7 +667,7 @@ function CardSearch({ onAddSuccess, onDataChanged, showToast, setActiveTab }) {
               <input
                 type="text"
                 className="input-control"
-                placeholder={t('search.numberPlaceholder')}
+                placeholder={game==='yugioh' ? 'e.g. RA01-EN020' : t('search.numberPlaceholder')}
                 value={numberQuery}
                 onChange={(e) => setNumberQuery(e.target.value)}
               />
@@ -677,7 +678,7 @@ function CardSearch({ onAddSuccess, onDataChanged, showToast, setActiveTab }) {
                 type="text"
                 className="input-control"
                 list="known-set-codes"
-                placeholder={t(game === 'mtg' ? 'search.setsPlaceholderMtg' : game === 'riftbound' ? 'search.setsPlaceholderRiftbound' : 'search.setsPlaceholderPokemon')}
+                placeholder={game==='yugioh' ? 'e.g. LOB, RA01, RA02' : t(game === 'mtg' ? 'search.setsPlaceholderMtg' : game === 'riftbound' ? 'search.setsPlaceholderRiftbound' : 'search.setsPlaceholderPokemon')}
                 value={setCodeQuery}
                 onChange={(e) => setSetCodeQuery(e.target.value)}
               />
@@ -731,7 +732,7 @@ function CardSearch({ onAddSuccess, onDataChanged, showToast, setActiveTab }) {
               type="text"
               inputMode="numeric"
               className="input-control"
-              placeholder={t('search.rapidNumberPlaceholder')}
+              placeholder={game==='yugioh' ? 'e.g. RA01-EN020' : t('search.rapidNumberPlaceholder')}
               value={rapidNumber}
               // Never disabled mid-add: disabling blurs the field, and the
               // refocus would land on a still-disabled element, forcing a click
@@ -957,6 +958,7 @@ function CardSearch({ onAddSuccess, onDataChanged, showToast, setActiveTab }) {
                     <div style={{ position: 'absolute', top: '6px', right: '6px', zIndex: 20, width: '22px', height: '22px', borderRadius: '50%', background: isSelected ? 'var(--accent-red)' : 'rgba(0,0,0,0.6)', border: '2px solid #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-strong)', fontSize: '0.8rem', fontWeight: 900 }}>{isSelected ? '✓' : ''}</div>
                   )}
                   <CardImage card={card} className="tcg-card-image" loading="lazy" draggable={false} />
+                  <YgoRarityBadge card={card} offset={selectMode?34:6}/>
                   {/* Already-in-the-binder count, so a set browse doesn't invite
                       re-adding what the user already has. */}
                   {card.owned_qty > 0 && (
