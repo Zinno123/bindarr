@@ -35,6 +35,7 @@ export default function QuickAddDrawer({ flow, onBackToMatches }) {
                 </p>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: 0, wordBreak: 'break-word' }}>{selectedCard.set_name}</p>
                 <LangFallbackNote card={selectedCard} style={{ justifyContent: 'flex-start' }} />
+                {selectedCard.game === 'yugioh' && <p style={{color:'var(--accent-yellow)',fontSize:'0.8rem',margin:0}}>Verify rarity and set before saving. {selectedCard.__ygoArtworkOnly ? 'Artwork match only — set not verified.' : 'A set number alone cannot prove the foil rarity.'}</p>}
                 {selectedCard.__ygoLimited && <p style={{ color: 'var(--accent-yellow)', fontSize: '0.8rem', margin: 0 }}>Limited Edition detected — this preview cannot store that edition separately.</p>}
               </div>
               <button type="button" className="btn btn-secondary btn-icon-only" onClick={closeDrawer} aria-label={t('common.close')} style={{ borderRadius: '50%', flexShrink: 0 }}>
@@ -101,7 +102,7 @@ export default function QuickAddDrawer({ flow, onBackToMatches }) {
                     style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
                   >
                     {findingPrintings ? <RefreshCw size={14} className="spin" /> : <Layers size={14} />}
-                    <span>{findingPrintings ? t('scan.fetchingCandidates') : (t('scan.changePrinting') || t('scan.otherPrintings') || t('scan.rightNameWrongPrinting'))}</span>
+                    <span>{findingPrintings ? t('scan.fetchingCandidates') : (selectedCard.game === 'yugioh' ? 'All sets & rarity variants' : (t('scan.changePrinting') || t('scan.otherPrintings') || t('scan.rightNameWrongPrinting')))}</span>
                   </button>
                 </div>
                 <div className="quick-add-footer-actions">

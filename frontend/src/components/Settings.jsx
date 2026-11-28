@@ -13,7 +13,6 @@ import { saveFile } from '../utils/saveFile';
 import NotificationSettings from './NotificationSettings';
 import { isDeviceMode } from '../apiBase';
 import { tradesEnabledFor } from '../utils/tradeAccess';
-import InstanceSettings from './InstanceSettings';
 import PreconImportModal from './PreconImportModal';
 import NavTabsSettings from './NavTabsSettings';
 import YgoCardmarketSettings from './YgoCardmarketSettings';
@@ -624,7 +623,7 @@ function Settings({ user, onUpdateUser, showToast, onLeaveDevice, onDataChanged 
           </Suspense>
         )}
 
-        {deviceMode && <InstanceSettings showToast={showToast} deviceMode />}
+        {deviceMode && <YgoCardmarketSettings onChanged={dataChanged} />}
 
         {/* Sharing Panel */}
         {!deviceMode && (
@@ -853,32 +852,32 @@ function Settings({ user, onUpdateUser, showToast, onLeaveDevice, onDataChanged 
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
             <KeyRound size={20} style={{ color: 'var(--accent-red)' }} />
-            <h3 style={{ color: 'var(--text-strong)', fontSize: '1.1rem' }}>{t('settings.keysTitle')}</h3>
+            <h3 style={{ color: 'var(--text-strong)', fontSize: '1.1rem' }}>Optional PSA certification</h3>
           </div>
 
           {/* One form and one save for all three: they are all "keys for outside
               services", and three separate saves was three round trips to set up
               an account once. */}
           <form onSubmit={handleSaveKeys} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
-            <KeyField
+            {false && <KeyField
               id="settings-tcg-api-key" label={t('settings.apiKeyTitle')} hint={t('settings.apiKeyIntro')}
               link="https://dev.pokemontcg.io" linkLabel={t('settings.apiKeyGetOne')}
               configured={!!user?.has_tcg_api_key} onClear={() => handleClearKey('tcg_api_key')}
               value={tcgApiKey} onChange={setTcgApiKey} disabled={keysLoading} t={t}
               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-            />
+            />}
             <KeyField
               id="settings-psa-token" label={t('settings.psaTokenTitle')} hint={t('settings.psaTokenIntro')}
               link="https://www.psacard.com/publicapi/documentation" linkLabel={t('settings.psaTokenGetOne')}
               configured={!!user?.has_psa_api_token} onClear={() => handleClearKey('psa_api_token')}
               value={psaToken} onChange={setPsaToken} disabled={keysLoading} t={t}
             />
-            <KeyField
+            {false && <KeyField
               id="settings-graded-key" label={t('settings.gradedKeyTitle')} hint={t('settings.gradedKeyIntro')}
               link="https://www.pokemonpricetracker.com/api" linkLabel={t('settings.gradedKeyGetOne')}
               configured={!!user?.has_graded_price_api_key} onClear={() => handleClearKey('graded_price_api_key')}
               value={gradedKey} onChange={setGradedKey} disabled={keysLoading} t={t}
-            />
+            />}
 
             <button
               type="submit"
@@ -1029,8 +1028,6 @@ function Settings({ user, onUpdateUser, showToast, onLeaveDevice, onDataChanged 
             )}
           </div>
         </div>
-
-        {deviceMode && <YgoCardmarketSettings onChanged={dataChanged} />}
 
         {/* Preferences Panel */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

@@ -86,6 +86,7 @@ function ScanMatchesModal({
           </form>
         </div>
 
+        {scanMatches.some(c=>c.game==='yugioh') && <p style={{color:'var(--accent-yellow)',fontSize:'0.8rem',margin:0}}>Choose the exact set and rarity. {scanMatches.length} catalogue entries. Identical artwork does not identify foil rarity.</p>}
         {/* Strongest matches first — the same order, and the same cards, as
             the ORB match list. Only the first few are shown: eight cards at
             once is a wall to read while holding the card you are trying to
@@ -105,7 +106,7 @@ function ScanMatchesModal({
                 <div className="tcg-card-name" style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-strong)', lineHeight: 1.2 }}>{getCardDisplayName(card.name, addLanguage(card), card.printed_name)}</div>
                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>#{card.__ygoPrintedCode || card.number}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{card.set_name}</div>
-                {card.rarity && <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-strong)' }}>{card.rarity}</div>}
+                {card.game === 'yugioh' && <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-strong)' }}>{card.rarity || 'Unknown rarity'}</div>}
                 <LangFallbackNote card={card} />
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-yellow)', marginTop: '0.2rem' }}><Price value={card.price_trend} currency={card.price_currency} />{card.game === 'yugioh' && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}> · {card.price_source === 'cardmarket' ? 'Cardmarket trend' : card.price_source === 'cardmarket-unmapped' ? 'Unlinked' : 'TCGplayer'}</span>}</div>
               </div>

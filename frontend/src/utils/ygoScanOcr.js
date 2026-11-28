@@ -30,7 +30,7 @@ export function exactYgoRows(rows, code) {
 // An English catalogue can be used as a reference for modern German codes,
 // but never silently count the reference as an exact printing.
 export function referenceCode(code) {
-  return typeof code === 'string' ? code.replace(/-DE(?=\d)/, '-EN') : null;
+  return typeof code === 'string' ? code.replace(/-DE(?=\d)/, '-EN').replace(/-G(?=\d)/, '-E') : null;
 }
 
 // The printed language tag is evidence for this physical copy, not a new catalogue row.

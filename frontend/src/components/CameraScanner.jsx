@@ -10,6 +10,7 @@ import { nextCamera } from '../utils/cameraPick';
 import { isDeviceMode } from '../apiBase';
 import { recognizeYgoEvidence } from './scanner/ygoCaptureOcr.js';
 import { exactYgoRows, referenceCode, ygoCopyLanguage } from '../utils/ygoScanOcr.js';
+import { fetchYgoPrintings, mergePrintings } from '../utils/ygoPrintings.js';
 import { useT } from '../utils/i18n';
 import { useCameraStream } from './scanner/useCameraStream';
 import { useScanPipeline } from './scanner/useScanPipeline';
@@ -299,7 +300,7 @@ function CameraScanner({ onAddSuccess, showToast }) {
   // MTG (many printings, no set code) still shows the picker.
   const applyMatches = async (matches, notFoundMsg, autoSingle = false) => {
     setScanMatches(matches);
-    setShowAllMatches(false);   // each scan's picker opens compact again
+    setShowAllMatches(scanGame === 'yugioh'); // show every YGO candidate
     if (matches.length === 0) {
       // Nothing in frame — the resolved-duplicate card has left, so clear the
       // skip guard; re-presenting it later should prompt again, not skip forever.
@@ -449,11 +450,8 @@ function CameraScanner({ onAddSuccess, showToast }) {
             }
             if (code) {
               const lookup = async (number) => {
-                const params = new URLSearchParams({ game: 'yugioh', lang: 'en', number, limit: '250' });
-                const response = await fetch('/api/search?' + params.toString());
-                if (!response.ok) throw new Error(`card lookup HTTP ${response.status}`);
-                const rows = exactYgoRows(await response.json(), number);
-                return { rows, pending: response.headers.get('X-Catalogue-Pending') === '1' };
+                const result = await fetchYgoPrintings({number});
+                return {rows:exactYgoRows(result.rows,number),pending:result.pending};
               };
               try {
                 let result = await lookup(code);
@@ -542,7 +540,21 @@ function CameraScanner({ onAddSuccess, showToast }) {
                 if (wanted.some(c => !c.card)) setScanStatus(t('scan.fetchingCandidates'));
                 const resolved = await resolveCandidates(wanted, matchGame, scanLang);
                 if (scanId !== currentScanId.current) return;
-                const validCandidates = resolved.filter(Boolean);
+                let validCandidates = resolved.filter(Boolean);
+                if (scanGame === 'yugioh') {
+                  // An image hit identifies artwork, not a specific rarity.
+                  // Expand every distinct set number from the shortlist.
+                  const codes = [...new Set(validCandidates.map(c => String(c.number||'').trim().toUpperCase()).filter(Boolean))];
+                  const variants = [];
+                  for (const number of codes) {
+                    try {
+                      const result = await fetchYgoPrintings({number});
+                      variants.push(exactYgoRows(result.rows,number));
+                    } catch { /* Keep the original candidates for manual review. */ }
+                    if (scanId !== currentScanId.current) return;
+                  }
+                  validCandidates = mergePrintings([validCandidates,...variants]).map(card => ({...card,__ygoArtworkOnly:true}));
+                }
                 // Remembered for the add drawer, which otherwise loses every
                 // alternative the moment a card is chosen.
                 flow.setLastMatches(validCandidates);
