@@ -70,6 +70,9 @@ function assignment(c, keepPrices) {
       AND COALESCE(excluded.price_source, '') NOT IN ${TCGCSV_SOURCES}
       THEN card_cache.${c} ELSE ${value} END`;
   }
+  if (PRICE_COLUMNS.has(c) || c === 'price_currency') {
+    value = `CASE WHEN card_cache.game='yugioh' AND card_cache.price_source='cardmarket' AND COALESCE(excluded.price_source,'')<>'cardmarket' THEN card_cache.${c} ELSE ${value} END`;
+  }
   return `${c} = ${value}`;
 }
 

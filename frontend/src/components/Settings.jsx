@@ -16,6 +16,7 @@ import { tradesEnabledFor } from '../utils/tradeAccess';
 import InstanceSettings from './InstanceSettings';
 import PreconImportModal from './PreconImportModal';
 import NavTabsSettings from './NavTabsSettings';
+import YgoCardmarketSettings from './YgoCardmarketSettings';
 
 // Device mode only; a server-mode build never loads the download manager.
 const DeviceScanSetup = lazy(() => import('./DeviceScanSetup'));
@@ -1028,6 +1029,8 @@ function Settings({ user, onUpdateUser, showToast, onLeaveDevice, onDataChanged 
             )}
           </div>
         </div>
+
+        {deviceMode && <YgoCardmarketSettings onChanged={dataChanged} />}
 
         {/* Preferences Panel */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>

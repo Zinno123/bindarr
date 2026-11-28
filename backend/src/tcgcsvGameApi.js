@@ -167,7 +167,7 @@ async function writePrices(game, products, quotes, idFor = (pid) => cardIdFor(ga
     params.push(...chunk.map(c => c.id));
     await db.run(
       `UPDATE card_cache SET ${sets.join(', ')}, price_source = 'tcgcsv', price_currency = 'USD'
-        WHERE id IN (${chunk.map(() => '?').join(', ')})`,
+        WHERE id IN (${chunk.map(() => '?').join(', ')}) AND NOT (game='yugioh' AND COALESCE(price_source,'')='cardmarket')`,
       params
     );
   }
@@ -263,6 +263,7 @@ async function refreshCatalogue(game, { force = false } = {}) {
     try { await require('./utils/compartmentSort').loadSetsCache(db); } catch { /* the weekly refresh reloads it */ }
     console.log(`${games.get(game).short}: ${cards} cards written, ${priced} prices refreshed from TCGCSV ${version}.`);
   }
+  if (game === 'yugioh') await require('./ygoCardmarketPrices').applyStored();
   return { version, cards, prices: priced };
 }
 

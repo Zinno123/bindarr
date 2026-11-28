@@ -54,9 +54,9 @@ export default function QuickAddDrawer({ flow, onBackToMatches }) {
                     className="quick-add-preview-img"
                   />
                   <div className="quick-add-preview-info">
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedCard.price_source === 'cardmarket' ? 'Cardmarket' : selectedCard.game === 'yugioh' ? 'TCGplayer (not Cardmarket)' : 'TCG Market'} ({printing})</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{selectedCard.price_source === 'cardmarket' ? 'Cardmarket · product trend (all editions)' : selectedCard.price_source === 'cardmarket-unmapped' ? 'No Cardmarket mapping' : selectedCard.game === 'yugioh' ? 'TCGplayer (not Cardmarket)' : 'TCG Market'}</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-yellow)', margin: '0.1rem 0' }}>
-                      <Price value={resolveCardPrice(selectedCard, printing)} currency={selectedCard.price_currency} />
+                      {selectedCard.price_source?.startsWith('cardmarket') && !(selectedCard.price_trend > 0) ? '—' : <Price value={resolveCardPrice(selectedCard, printing)} currency={selectedCard.price_currency} />}
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
                       Rarity: <span style={{ color: 'var(--text-strong)', fontWeight: 600 }}>{selectedCard.rarity || 'Unknown'}</span>

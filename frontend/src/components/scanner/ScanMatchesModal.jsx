@@ -107,7 +107,7 @@ function ScanMatchesModal({
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{card.set_name}</div>
                 {card.rarity && <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-strong)' }}>{card.rarity}</div>}
                 <LangFallbackNote card={card} />
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-yellow)', marginTop: '0.2rem' }}><Price value={card.price_trend} currency={card.price_currency} />{card.game === 'yugioh' && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}> · {card.price_source === 'cardmarket' ? 'Cardmarket' : 'TCGplayer'}</span>}</div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-yellow)', marginTop: '0.2rem' }}><Price value={card.price_trend} currency={card.price_currency} />{card.game === 'yugioh' && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}> · {card.price_source === 'cardmarket' ? 'Cardmarket trend' : card.price_source === 'cardmarket-unmapped' ? 'Unlinked' : 'TCGplayer'}</span>}</div>
               </div>
             </div>
           ))}

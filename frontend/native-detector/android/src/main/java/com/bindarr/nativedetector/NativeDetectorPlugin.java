@@ -256,6 +256,25 @@ public class NativeDetectorPlugin extends Plugin {
         });
     }
 
+    private static final ExecutorService CATALOG_EXECUTOR = Executors.newSingleThreadExecutor();
+    @PluginMethod
+    public void downloadYgoMappings(PluginCall call) {
+        String key = call.getString("apiKey");
+        if (key == null || !key.matches("cnk_live_[A-Za-z0-9_-]{8,256}")) {
+            call.reject("Invalid CardNexus API key format");
+            return;
+        }
+        CATALOG_EXECUTOR.execute(() -> {
+            try { call.resolve(YgoCatalogLinks.download(key)); }
+            catch (Exception e) {
+                // Do not expose signed URLs or request credentials through errors.
+                String message = e.getMessage();
+                if (message == null || !message.matches("[A-Za-z0-9 .-]{1,140}")) message = "Catalogue download failed";
+                call.reject(message);
+            }
+        });
+    }
+
     private static OrtSession create(byte[] bytes, String ep) throws OrtException {
         int threads = Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors()));
         try (OrtSession.SessionOptions o = new OrtSession.SessionOptions()) {

@@ -44,7 +44,12 @@ const PRICE_SWEEPS = [
   // Yu-Gi-Oh!, One Piece, Digimon, Flesh and Blood, Star Wars: Unlimited, Gundam: their
   // whole catalogue comes from TCGCSV, prices included. No-op for a game no one
   // on the install has opened.
-  { key: 'tcgcsvgames', run: () => require('../tcgcsvGameApi').updateCollectionPrices() },
+  { key: 'tcgcsvgames', run: async () => {
+    try { return await require('../tcgcsvGameApi').updateCollectionPrices(); }
+    finally {
+      await require('../ygoCardmarketPrices').refresh().catch(e => console.warn('YGO Cardmarket:', e.message));
+    }
+  } },
 ];
 
 let running = null;       // the run in progress, or null

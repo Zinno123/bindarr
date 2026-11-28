@@ -9,7 +9,7 @@ export const CURRENCIES = [
   { code: 'JPY', symbol: '¥', label: 'JPY (¥)' },
 ];
 
-export const DEFAULT_CURRENCY = 'USD';
+export const DEFAULT_CURRENCY = 'EUR';
 
 export const SYMBOLS = {
   USD: '$',

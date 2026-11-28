@@ -55,3 +55,33 @@ function parseSetCode(text) {
 }
 
 module.exports = { PRICE_GUIDE_URL, PRODUCT_LIST_URL, indexPriceGuide, priceForVerifiedProduct, extractSetCodes, parseSetCode };
+
+
+// CardNexus catalog external IDs are exact provider links, not a name match.
+// Reject both directions of one-to-many mappings, including regional reprints.
+// We deliberately don't infer an edition-specific quote from a product-level guide.
+function buildCrosswalk(records) {
+  if (!Array.isArray(records)) throw new Error('Invalid catalogue links');
+  const forward = new Map(), reverse = new Map();
+  const link = (map, a, b) => {
+    if (!map.has(a)) map.set(a, new Set());
+    map.get(a).add(b);
+  };
+  for (const row of records) {
+    const a = Array.isArray(row?.tcgplayer) ? [...new Set(row.tcgplayer.filter(positiveId))] : [];
+    const b = Array.isArray(row?.cardmarket) ? [...new Set(row.cardmarket.filter(positiveId))] : [];
+    for (const x of a) for (const y of b) {
+      link(forward, x, y);
+      link(reverse, y, x);
+    }
+  }
+  const pairs = [];
+  for (const [tcg, ids] of forward) {
+    if (ids.size !== 1) continue;
+    const cm = [...ids][0];
+    if (reverse.get(cm).size === 1) pairs.push({tcg, cm});
+  }
+  return pairs;
+}
+
+module.exports.buildCrosswalk = buildCrosswalk;

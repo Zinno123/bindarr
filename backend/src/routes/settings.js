@@ -116,6 +116,23 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Cardmarket setup is an explicit admin action. The API key never enters
+// this backend; only catalog ID links are submitted by the local Android client.
+router.get('/ygo-cardmarket', requireAdmin, async (req,res) => {
+  try { res.json(await require('../ygoCardmarketPrices').status()); }
+  catch { res.status(500).json({error:'Could not read Cardmarket status'}); }
+});
+router.post('/ygo-cardmarket/import', requireAdmin, async (req,res) => {
+  const records=req.body?.records;
+  if (!Array.isArray(records) || !records.length || records.length>300000) return res.status(400).json({error:'Invalid catalogue links'});
+  try { res.json(await require('../ygoCardmarketPrices').importLinks(records)); }
+  catch(e) { res.status(502).json({error:e.message}); }
+});
+router.post('/ygo-cardmarket/refresh', requireAdmin, async (req,res) => {
+  try { res.json(await require('../ygoCardmarketPrices').refresh(true)); }
+  catch(e) { res.status(502).json({error:e.message}); }
+});
+
 // Only admins can override settings
 router.put('/', requireAdmin, async (req, res) => {
   const {
